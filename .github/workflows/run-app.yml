@@ -28,7 +28,7 @@ jobs:
       # Step 3: Get Chrome version
       - name: Get Chrome Version
         run: |
-          CHROME_VERSION=$(google-chrome --version | sed 's/Google Chrome \([0-9]*\)\..*/\1/')
+          CHROME_VERSION=$(google-chrome --version)
           echo "Chrome Version: $CHROME_VERSION"
 
       # Step 4: Download ChromeDriver
