@@ -38,8 +38,7 @@ jobs:
       # Step 4: Get ChromeDriver version matching Chrome version
       - name: Get ChromeDriver Version
         run: |
-          CHROMEDRIVER_VERSION=$(curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION})
-          echo "ChromeDriver Version: $CHROMEDRIVER_VERSION"
+          CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE" || echo "Error: No such version")
 
       # Step 5: Download and install ChromeDriver
       - name: Install ChromeDriver
