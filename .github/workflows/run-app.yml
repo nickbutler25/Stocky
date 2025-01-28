@@ -86,15 +86,17 @@ jobs:
         run: |
           chromedriver --version
 
-      - name: Install Selenium
-        run: |
-          python install selenium webdriver-manager --no-deps
+
 
       #Install required dependencies from requirements file
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt  # If you have dependencies
+
+      - name: Install Selenium
+        run: |
+          pip install selenium webdriver-manager --no-deps
 
       - name: Run Python script
         run: |
