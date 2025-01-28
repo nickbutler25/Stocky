@@ -33,7 +33,7 @@ jobs:
       - name: Get Chrome Version
         run: |
           CHROME_VERSION=$(google-chrome --version)
-          echo "Chrome Major Version: $CHROME_VERSION"
+          echo "Chrome Version: $CHROME_VERSION"
 
       # Step 4: Get ChromeDriver version matching Chrome version
       #- name: Get ChromeDriver Version
@@ -44,7 +44,7 @@ jobs:
       # Step 5: Download and install ChromeDriver
       - name: Install ChromeDriver
         run: |
-          wget -q https://chromedriver.storage.googleapis.com/chrome-for-testing-public/${CHROME_VERSION}/linux64/chromedriver_linux64.zip
+          wget -q https://storage.googleapis.com/chrome-for-testing-public/${CHROME_VERSION}/linux64/chromedriver_linux64.zip
           unzip chromedriver_linux64.zip
           sudo mv chromedriver /usr/local/bin/chromedriver
           sudo chmod +x /usr/local/bin/chromedriver
