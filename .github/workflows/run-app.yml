@@ -35,20 +35,24 @@ jobs:
           CHROME_VERSION=$(google-chrome --version)
           echo "Chrome Version: $CHROME_VERSION"
 
-      # Step 4: Get ChromeDriver version matching Chrome version
-      #- name: Get ChromeDriver Version
-      #  run: |
-      #    CHROMEDRIVER_VERSION=$(curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION})
-      #    echo "ChromeDriver Version: $CHROMEDRIVER_VERSION"
-
-      # Step 5: Download and install ChromeDriver
+      # Step 4: Download and install ChromeDriver
       - name: Install ChromeDriver
         run: |
-          wget -q https://storage.googleapis.com/chrome-for-testing-public/${CHROME_VERSION}/linux64/chromedriver_linux64.zip
-          unzip chromedriver_linux64.zip
-          sudo mv chromedriver /usr/local/bin/chromedriver
+          # Download ChromeDriver
+          wget -q https://storage.googleapis.com/chrome-for-testing-public/${CHROME_VERSION}/linux64/chromedriver-linux64.zip
+          echo "Downloaded chromedriver-linux64.zip"
+
+          # Unzip the file
+          unzip chromedriver-linux64.zip -d chromedriver-linux64
+          echo "Unzipped chromedriver-linux64.zip"
+
+          # Move chromedriver to /usr/local/bin
+          sudo mv chromedriver-linux64/chromedriver /usr/local/bin/chromedriver
+          echo "Moved chromedriver to /usr/local/bin"
+
+          # Set executable permissions
           sudo chmod +x /usr/local/bin/chromedriver
-          chromedriver --version  # Verify installation
+          echo "Set executable permissions for chromedriver"
 
       - name: Install Python dependencies
         run: |
