@@ -35,10 +35,10 @@ jobs:
       - name: Download ChromeDriver
         run: |
           # Print the URL for debugging
-          echo "ChromeDriver URL: https://storage.googleapis.com/chrome-for-testing-public/${CHROME_VERSION}/linux64/chromedriver-linux64.zip"
+          echo "ChromeDriver URL: https://storage.googleapis.com/chrome-for-testing-public/132.0.6834.110/linux64/chromedriver-linux64.zip"
 
           # Download ChromeDriver without suppressing output for debugging
-          wget https://storage.googleapis.com/chrome-for-testing-public/${CHROME_VERSION}/linux64/chromedriver-linux64.zip
+          wget https://storage.googleapis.com/chrome-for-testing-public/132.0.6834.110/linux64/chromedriver-linux64.zip
           if [ $? -ne 0 ]; then
             echo "Failed to download ChromeDriver"
             exit 1
