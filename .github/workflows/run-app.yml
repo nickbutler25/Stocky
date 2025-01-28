@@ -17,20 +17,34 @@ jobs:
         with:
           python-version: '3.13'
 
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y wget unzip google-chrome-stable
 
-      - name: Install Chromedriver
+      # Step 2: Install Google Chrome
+      - name: Install Google Chrome
+        run: |
+          wget -q -O - https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb > chrome.deb
+          sudo dpkg -i chrome.deb
+          sudo apt --fix-broken install -y  # Fix any missing dependencies
+
+      # Step 3: Get Chrome version
+      - name: Get Chrome Version
         run: |
           CHROME_VERSION=$(google-chrome --version | awk '{print $3}' | cut -d '.' -f 1)
+          echo "Chrome Version: $CHROME_VERSION"
+
+      # Step 4: Get ChromeDriver version matching Chrome version
+      - name: Get ChromeDriver Version
+        run: |
           CHROMEDRIVER_VERSION=$(curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION})
+          echo "ChromeDriver Version: $CHROMEDRIVER_VERSION"
+
+      # Step 5: Download and install ChromeDriver
+      - name: Install ChromeDriver
+        run: |
           wget -q https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip
           unzip chromedriver_linux64.zip
           sudo mv chromedriver /usr/local/bin/chromedriver
           sudo chmod +x /usr/local/bin/chromedriver
-          chromedriver --version  # Verify installation
+          chromedriver --version
 
       - name: Install Python dependencies
         run: |
