@@ -61,14 +61,14 @@ jobs:
         run: |
           ls -R chromedriver-linux64  # List all files after unzip
 
-      # Step 8: Move ChromeDriver to /usr/local/bin
+      # Step 8: Move ChromeDriver to /usr/local/bin (account for nested directory)
       - name: Move ChromeDriver
         run: |
-          if [ ! -f chromedriver-linux64/chromedriver ]; then
+          if [ ! -f chromedriver-linux64/chromedriver-linux64/chromedriver ]; then
             echo "ChromeDriver binary not found after unzip"
             exit 1
           fi
-          sudo mv chromedriver-linux64/chromedriver /usr/local/bin/chromedriver
+          sudo mv chromedriver-linux64/chromedriver-linux64/chromedriver /usr/local/bin/chromedriver
           echo "Moved chromedriver to /usr/local/bin"
 
       # Step 9: Set executable permissions
