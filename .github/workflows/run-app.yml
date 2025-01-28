@@ -18,41 +18,82 @@ jobs:
           python-version: '3.13'
 
 
-        # Step 2: Install Google Chrome
+      # Step 2: Install Google Chrome
       - name: Install Google Chrome
         run: |
-          sudo apt-get update
-          sudo apt-get install -y wget
-          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-          echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
-          sudo apt-get update
-          sudo apt-get install -y google-chrome-stable
-          google-chrome --version  # Verify installation
+          wget -q -O - https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb > chrome.deb
+          sudo dpkg -i chrome.deb
+          sudo apt --fix-broken install -y  # Fix any missing dependencies
 
       # Step 3: Get Chrome version
       - name: Get Chrome Version
         run: |
-          CHROME_VERSION=$(google-chrome --version)
+          CHROME_VERSION=$(google-chrome --version | sed 's/Google Chrome \([0-9]*\)\..*/\1/')
           echo "Chrome Version: $CHROME_VERSION"
 
-      # Step 4: Download and install ChromeDriver
-      - name: Install ChromeDriver
+      # Step 4: Download ChromeDriver
+      - name: Download ChromeDriver
         run: |
-          # Download ChromeDriver
-          wget -q https://storage.googleapis.com/chrome-for-testing-public/${CHROME_VERSION}/linux64/chromedriver-linux64.zip
+          # Print the URL for debugging
+          echo "ChromeDriver URL: https://storage.googleapis.com/chrome-for-testing-public/${CHROME_VERSION}/linux64/chromedriver-linux64.zip"
+
+          # Download ChromeDriver without suppressing output for debugging
+          wget https://storage.googleapis.com/chrome-for-testing-public/${CHROME_VERSION}/linux64/chromedriver-linux64.zip
+          if [ $? -ne 0 ]; then
+            echo "Failed to download ChromeDriver"
+            exit 1
+          fi
           echo "Downloaded chromedriver-linux64.zip"
 
-          # Unzip the file
+      # Step 5: Verify the downloaded file exists
+      - name: Verify downloaded file
+        run: |
+          if [ ! -f chromedriver-linux64.zip ]; then
+            echo "ChromeDriver zip file not found"
+            exit 1
+          fi
+          echo "Verified chromedriver-linux64.zip exists"
+
+      # Step 6: Unzip ChromeDriver
+      - name: Unzip ChromeDriver
+        run: |
+          # Unzip and check the output
           unzip chromedriver-linux64.zip -d chromedriver-linux64
+          if [ $? -ne 0 ]; then
+            echo "Failed to unzip ChromeDriver"
+            exit 1
+          fi
           echo "Unzipped chromedriver-linux64.zip"
 
-          # Move chromedriver to /usr/local/bin
+      # Step 7: Move ChromeDriver to /usr/local/bin
+      - name: Move ChromeDriver
+        run: |
+          if [ ! -f chromedriver-linux64/chromedriver ]; then
+            echo "ChromeDriver binary not found after unzip"
+            exit 1
+          fi
+
           sudo mv chromedriver-linux64/chromedriver /usr/local/bin/chromedriver
+          if [ $? -ne 0 ]; then
+            echo "Failed to move ChromeDriver to /usr/local/bin"
+            exit 1
+          fi
           echo "Moved chromedriver to /usr/local/bin"
 
-          # Set executable permissions
+      # Step 8: Set executable permissions
+      - name: Set executable permissions
+        run: |
           sudo chmod +x /usr/local/bin/chromedriver
+          if [ $? -ne 0 ]; then
+            echo "Failed to set executable permissions"
+            exit 1
+          fi
           echo "Set executable permissions for chromedriver"
+
+      # Step 9: Verify ChromeDriver installation
+      - name: Verify ChromeDriver
+        run: |
+          chromedriver --version
 
       - name: Install Python dependencies
         run: |
