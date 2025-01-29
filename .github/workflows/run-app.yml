@@ -100,4 +100,4 @@ jobs:
 
       - name: Run Python script
         run: |
-          python program.py '{"username": "${{ vars.MAD_AL_USER }}", "password": "${{ secrets.MAD_AL_PASSWORD }}", "time_to_book": "vars.FRIDAY_TIME"}'
+          python program.py '{"username": "${{ vars.MAD_AL_USER }}", "password": "${{ secrets.MAD_AL_PASSWORD }}", "time_to_book": "${{ vars.FRIDAY_TIME }}"}'
