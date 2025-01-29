@@ -122,11 +122,11 @@ def find_and_click_day_element(driver: webdriver, day_to_search: int) -> None:
 
             # Wait for the previous day's element to ensure the page is loaded
             WebDriverWait(driver, TIMEOUT).until(
-                EC.element_to_be_clickable((By.LINK_TEXT, str(day_to_search)))
+                EC.element_to_be_clickable((By.LINK_TEXT, str(day_to_search - 1)))
             )
 
             logging.info(f'Clicking {day_to_search} as the date')
-            driver.find_element(By.LINK_TEXT, str(day_to_search)).click()
+            driver.find_element(By.LINK_TEXT, str(day_to_search - 1)).click()
             return  # Exit the function if the element is found and clicked
         except Exception as e:
             logging.warning(f"Attempt {retry + 1} failed: {e}")
