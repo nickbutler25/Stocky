@@ -109,8 +109,8 @@ def wait_until_start_time(start_time: datetime) -> None:
     """Wait until the specified start time is reached."""
     logging.info(f'Waiting for start time of {start_time}')
     logging.info(f'Time now of {datetime.now()}')
-    while datetime.now() < start_time:
-        t.sleep(1)
+    #while datetime.now() < start_time:
+    #    t.sleep(1)
 
 def find_and_click_day_element(driver: webdriver, day_to_search: int) -> None:
     """Find and click the day element after refreshing the page until it appears."""
@@ -122,7 +122,7 @@ def find_and_click_day_element(driver: webdriver, day_to_search: int) -> None:
 
             # Wait for the previous day's element to ensure the page is loaded
             WebDriverWait(driver, TIMEOUT).until(
-                EC.element_to_be_clickable((By.LINK_TEXT, str(day_to_search - 1)))
+                EC.element_to_be_clickable((By.LINK_TEXT, str(day_to_search)))
             )
 
             logging.info(f'Clicking {day_to_search} as the date')
