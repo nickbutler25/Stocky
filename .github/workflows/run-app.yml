@@ -2,7 +2,7 @@ name: Run Stocky Tee Times Daily
 
 on:
   schedule:
-    - cron: '58 17 * * *'  # Runs at 5:58 PM UTC every day
+    - cron: '57 17 * * *'  # Runs at 5:58 PM UTC every day
   workflow_dispatch:  # Allows manual triggering
 
 jobs:
@@ -100,4 +100,4 @@ jobs:
 
       - name: Run Python script
         run: |
-          python program.py
+          python program.py '{"username": "${{ vars.MAD_AL_USER }}", "password": "${{ secrets.MAD_AL_PASSWORD }}", "time_to_book": "vars.FRIDAY_TIME"}'
