@@ -108,6 +108,7 @@ def validate_inputs(start_time: datetime, day_to_search: int, time_to_book: str)
 def wait_until_start_time(start_time: datetime) -> None:
     """Wait until the specified start time is reached."""
     logging.info(f'Waiting for start time of {start_time.time()}')
+    logging.info(f'Time now of {datetime.now().time()}')
     while datetime.now() < start_time:
         t.sleep(1)
 
