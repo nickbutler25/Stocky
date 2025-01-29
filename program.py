@@ -126,7 +126,7 @@ def find_and_click_day_element(driver: webdriver, day_to_search: int) -> None:
             )
 
             logging.info(f'Clicking {day_to_search} as the date')
-            driver.find_element(By.LINK_TEXT, str(day_to_search - 1)).click()
+            driver.find_element(By.LINK_TEXT, str(day_to_search)).click()
             return  # Exit the function if the element is found and clicked
         except Exception as e:
             logging.warning(f"Attempt {retry + 1} failed: {e}")
