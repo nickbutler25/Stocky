@@ -186,6 +186,7 @@ try:
 
 except Exception as e:
     logging.error(e)
+    raise
 
 
 
