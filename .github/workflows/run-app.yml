@@ -2,7 +2,7 @@ name: Run Stocky Tee Times Daily
 
 on:
   schedule:
-    - cron: '57 17 * * *'  # Runs at 5:58 PM UTC every day
+    - cron: '55 17 * * *'  # Runs at 5:58 PM UTC every day
   workflow_dispatch:  # Allows manual triggering
 
 jobs:
