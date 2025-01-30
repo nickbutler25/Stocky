@@ -106,7 +106,7 @@ jobs:
           
           # Set target time for 5:58 PM UTC in seconds since epoch
           TARGET_HOUR=17
-          TARGET_MINUTE=23
+          TARGET_MINUTE=58
           TARGET_SECOND=0
           TARGET_TIME=$(date -d "today ${TARGET_HOUR}:${TARGET_MINUTE}:${TARGET_SECOND}" +%s)
           

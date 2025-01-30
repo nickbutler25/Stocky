@@ -15,7 +15,7 @@ import json
 
 TIMEOUT = 20  # Timeout for WebDriverWait
 MAX_RETRIES = 30  # Maximum number of retries for finding the day element
-REFRESH_INTERVAL = 0.5  # Time interval between page refreshes (in seconds)
+REFRESH_INTERVAL = 0.2  # Time interval between page refreshes (in seconds)
 
 
 def login_and_setup(username, password, time_to_book):
@@ -109,8 +109,8 @@ def wait_until_start_time(start_time: datetime) -> None:
     """Wait until the specified start time is reached."""
     logging.info(f'Waiting for start time of {start_time}')
     logging.info(f'Time now of {datetime.now()}')
-    #while datetime.now() < start_time:
-    #    t.sleep(1)
+    while datetime.now() < start_time:
+        t.sleep(1)
 
 def find_and_click_day_element(driver: webdriver, day_to_search: int) -> None:
     """Find and click the day element after refreshing the page until it appears."""
