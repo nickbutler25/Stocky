@@ -23,7 +23,7 @@ def login_and_setup(username, password, time_to_book):
     today = datetime.now().date()
     from datetime import time
     # Set the time to 6 PM (18:00)
-    six_pm = time(17, 59, 45)
+    six_pm = time(17, 59, 50)
 
     # Combine today's date with the 6 PM time to create a datetime object
     start_time = datetime.combine(today, six_pm)
@@ -109,8 +109,8 @@ def wait_until_start_time(start_time: datetime) -> None:
     """Wait until the specified start time is reached."""
     logging.info(f'Waiting for start time of {start_time}')
     logging.info(f'Time now of {datetime.now()}')
-    while datetime.now() < start_time:
-        t.sleep(1)
+    #while datetime.now() < start_time:
+    #    t.sleep(1)
 
 def find_and_click_day_element(driver: webdriver, day_to_search: int) -> None:
     """Find and click the day element after refreshing the page until it appears."""
