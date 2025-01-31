@@ -14,7 +14,7 @@ import sys
 import json
 
 TIMEOUT = 10  # Timeout for WebDriverWait
-MAX_RETRIES = 12  # Maximum number of retries for finding the day element
+MAX_RETRIES = 20  # Maximum number of retries for finding the day element
 
 
 def login_and_setup(username, password, time_to_book):
