@@ -13,9 +13,8 @@ from times import GenerateTimes
 import sys
 import json
 
-TIMEOUT = 20  # Timeout for WebDriverWait
-MAX_RETRIES = 30  # Maximum number of retries for finding the day element
-REFRESH_INTERVAL = 0.2  # Time interval between page refreshes (in seconds)
+TIMEOUT = 10  # Timeout for WebDriverWait
+MAX_RETRIES = 12  # Maximum number of retries for finding the day element
 
 
 def login_and_setup(username, password, time_to_book):
@@ -23,7 +22,7 @@ def login_and_setup(username, password, time_to_book):
     today = datetime.now().date()
     from datetime import time
     # Set the time to 6 PM (18:00)
-    six_pm = time(17, 59, 50)
+    six_pm = time(18, 00, 00)
 
     # Combine today's date with the 6 PM time to create a datetime object
     start_time = datetime.combine(today, six_pm)
@@ -86,7 +85,6 @@ def login_and_setup(username, password, time_to_book):
     driver.find_element(By.NAME, "Submit").click()
     logging.info(f'Make booking selected')
 
-
     logging.info(f'Waiting for dates to load')
     # Select Date
     WebDriverWait(driver, 20).until(
@@ -110,45 +108,61 @@ def wait_until_start_time(start_time: datetime) -> None:
     logging.info(f'Waiting for start time of {start_time}')
     logging.info(f'Time now of {datetime.now()}')
     while datetime.now() < start_time:
-        t.sleep(1)
+        t.sleep(0.5)
 
 def find_and_click_day_element(driver: webdriver, day_to_search: int) -> None:
     """Find and click the day element after refreshing the page until it appears."""
     retry = 0
     while retry < MAX_RETRIES:
-        try:
+
             driver.refresh()
             logging.info(f'Refreshing page (Attempt {retry + 1} of {MAX_RETRIES})')
 
             # Wait for the previous day's element to ensure the page is loaded
             WebDriverWait(driver, TIMEOUT).until(
-                EC.element_to_be_clickable((By.LINK_TEXT, str(day_to_search - 1)))
+                EC.presence_of_element_located((By.LINK_TEXT, str(day_to_search - 1)))
             )
 
             logging.info(f'Clicking {day_to_search} as the date')
-            driver.find_element(By.LINK_TEXT, str(day_to_search)).click()
-            return  # Exit the function if the element is found and clicked
-        except Exception as e:
-            logging.warning(f"Attempt {retry + 1} failed: {e}")
-            retry += 1
-            t.sleep(REFRESH_INTERVAL)
+            elements = driver.find_elements(By.LINK_TEXT, str(day_to_search))
+            if not elements:
+                logging.warning(f"Attempt {retry} failed")
+                retry += 1
+            else:
+                elements[0].click()
+                return  # Exit the function if the element is found and clicked
 
     raise Exception(f"Failed to find or click the day element after {MAX_RETRIES} retries")
 
 def book_preferred_time(driver: webdriver, time_to_book: str) -> None:
     """Book the preferred tee time."""
     try:
-        # Wait for the preferred time to be clickable
-        time_to_book_element = WebDriverWait(driver, TIMEOUT).until(
-            EC.element_to_be_clickable((By.LINK_TEXT, time_to_book))
-        )
-        logging.info(f'Booking time: {time_to_book}')
-        time_to_book_element.click()
+        retry = 0
+        while retry < 800:
+            elements = driver.find_elements(By.LINK_TEXT, time_to_book)
+            if not elements:
+                #logging.warning(f"Attempt {retry + 1} failed")
+                retry += 1
+            else:
+                elements[0].click()
+                logging.info(f'Time Clicked: {time_to_book}')
+                logging.info(f'Retry Count: {retry}')
+                break
 
         # Switch to the booking frame and submit the form
         driver.switch_to.frame(0)
-        driver.find_element(By.NAME, "submit_frm_nopay").click()
-        logging.info(f'Successfully booked the following time: {time_to_book}')
+
+        retry = 0
+        while retry < 100:
+            elements = driver.find_elements(By.NAME, "submit_frm_nopay")
+            if not elements:
+                retry += 1
+            else:
+                elements[0].click()
+                logging.info(f'Successfully booked the following time: {time_to_book}')
+                logging.info(f'Retry Count: {retry}')
+                break
+
     except Exception as e:
         logging.error(f"Failed to book the preferred time: {e}")
         raise
