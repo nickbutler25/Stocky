@@ -8,6 +8,9 @@ on:
 jobs:
   run-app:
     runs-on: ubuntu-latest
+
+    if: ${{ vars.EDDIE_SHOULD_RUN == 'true' }}  # Only run if SHOULD_RUN is true
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
