@@ -128,6 +128,6 @@ jobs:
       - name: Run Python script
         run: |
           # Run the second instance of the Python script with the second set of parameters
-          python program.py '{"username": "${{ vars.MAD_AL_USER }}", "password": "${{ secrets.MAD_AL_PASSWORD }}", "time_to_book": "${{ vars.WEDNESDAY_TIME }}"}'
+          python program.py '{"username": "${{ vars.MAD_AL_USER }}", "password": "${{ secrets.MAD_AL_PASSWORD }}", "time_to_book": "${{ vars.SATURDAY_TIME }}"}'
 
 
