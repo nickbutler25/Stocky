@@ -2,7 +2,7 @@ name: Run Stocky Tee Times Daily - Mad Al
 
 on:
   schedule:
-    - cron: '55 17 * * 4,5'  # Runs at 5:55 PM UTC on Thursdays and Fridays
+    - cron: '39 17 * * 1,4,5'  # Runs at 5:45 PM UTC on Thursdays and Fridays
   workflow_dispatch:  # Allows manual triggering
 
 jobs:
