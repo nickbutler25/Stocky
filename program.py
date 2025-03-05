@@ -166,7 +166,7 @@ def book_preferred_time(driver: webdriver, time_to_book: str) -> None:
                     break
 
         else:
-            logging.info(f'Time didn't appear within {max_retry} retries, most likely time wasn't available')
+            logging.info(f'Time didn't appear within {max_retry} retries, most likely time was not available')
             
 
     except Exception as e:
