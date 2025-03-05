@@ -138,7 +138,8 @@ def book_preferred_time(driver: webdriver, time_to_book: str) -> None:
     """Book the preferred tee time."""
     try:
         retry = 0
-        while retry < 800:
+        max_retry = 1600
+        while retry < max_retry:
             elements = driver.find_elements(By.LINK_TEXT, time_to_book)
             if not elements:
                 #logging.warning(f"Attempt {retry + 1} failed")
@@ -149,19 +150,24 @@ def book_preferred_time(driver: webdriver, time_to_book: str) -> None:
                 logging.info(f'Retry Count: {retry}')
                 break
 
-        # Switch to the booking frame and submit the form
-        driver.switch_to.frame(0)
+        if retry < max_retry:
+            # Switch to the booking frame and submit the form
+            driver.switch_to.frame(0)
+    
+            retry = 0
+            while retry < 100:
+                elements = driver.find_elements(By.NAME, "submit_frm_nopay")
+                if not elements:
+                    retry += 1
+                else:
+                    elements[0].click()
+                    logging.info(f'Successfully booked the following time: {time_to_book}')
+                    
+                    break
 
-        retry = 0
-        while retry < 100:
-            elements = driver.find_elements(By.NAME, "submit_frm_nopay")
-            if not elements:
-                retry += 1
-            else:
-                elements[0].click()
-                logging.info(f'Successfully booked the following time: {time_to_book}')
-                logging.info(f'Retry Count: {retry}')
-                break
+        else:
+            logging.info(f'Time didn't appear within {max_retry} retries, most likely time wasn't available')
+            
 
     except Exception as e:
         logging.error(f"Failed to book the preferred time: {e}")
