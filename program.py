@@ -210,12 +210,12 @@ try:
 
     logging.info('Starting search for Stocky Tee Times')
 
-    #data = json.loads(sys.argv[1])
-    username = 'alexhicks'
-    password = 'Spencer03'
-    time_to_book = '08:28'
-    min_time = '08:15'
-    max_time = '09:00'
+    data = json.loads(sys.argv[1])
+    username = data.get('username')
+    password = data.get('password')
+    time_to_book = data.get('time_to_book')
+    min_time = data.get('min_time')
+    max_time = data.get('max_time')
 
     login_and_setup(username, password, time_to_book, min_time, max_time)
 
