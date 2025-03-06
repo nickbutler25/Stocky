@@ -9,7 +9,8 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 from collections import namedtuple
 from selenium.webdriver.support.wait import WebDriverWait
-from times import GenerateTimes
+
+from time_functions import generate_times, day_nine_days_from_now
 import sys
 import json
 
@@ -17,7 +18,8 @@ TIMEOUT = 10  # Timeout for WebDriverWait
 MAX_RETRIES = 20  # Maximum number of retries for finding the day element
 
 
-def login_and_setup(username, password, time_to_book):
+
+def login_and_setup(username: str, password: str, time_to_book: str, min_time: str, max_time : str):
     # Get today's date in UTC (GMT is the same as UTC)
     today = datetime.now().date()
     from datetime import time
@@ -26,17 +28,14 @@ def login_and_setup(username, password, time_to_book):
 
     # Combine today's date with the 6 PM time to create a datetime object
     start_time = datetime.combine(today, six_pm)
-    login_time = start_time - timedelta(minutes=1)
 
-    # while datetime.now() < login_time:
-    #    t.sleep(40)
+    day_to_search = day_nine_days_from_now()
 
-    times = GenerateTimes(time_to_book)
-    times_sorted_list, min_time, max_time, preferred_time = times.get_list_of_times()
-    logging.info(f'Trying to book {preferred_time.time()}')
+    time_list = generate_times(time_to_book, min_time, max_time)
 
-    day_to_search = times_sorted_list[0].day
-    logging.info(f'On the following date {times_sorted_list[0].date()}')
+    logging.info(f'Booking a time between {min_time} and {max_time}')
+    logging.info(f'Ideally at {time_to_book}')
+    logging.info(f'On the following day {day_to_search}')
 
     # Use chromedriver
     options = webdriver.ChromeOptions()
@@ -91,17 +90,20 @@ def login_and_setup(username, password, time_to_book):
         EC.element_to_be_clickable((By.LINK_TEXT, str(day_to_search - 1)))
     )
     logging.info(f'Dates loaded')
-    wait_and_book(driver, start_time, day_to_search, time_to_book)
+    wait_and_book(driver, start_time, day_to_search, time_list)
 
 
-def validate_inputs(start_time: datetime, day_to_search: int, time_to_book: str) -> None:
+def validate_inputs(start_time: datetime, day_to_search: int, time_list: list) -> None:
     """Validate the inputs to ensure they are in the correct format."""
     if not isinstance(start_time, datetime):
         raise ValueError("start_time must be a datetime object")
+
     if not isinstance(day_to_search, int) or day_to_search < 1 or day_to_search > 31:
         raise ValueError("day_to_search must be an integer between 1 and 31")
-    if not isinstance(time_to_book, str):
-        raise ValueError("time_to_book must be a string")
+
+    if not isinstance(time_list, list) or not all(isinstance(item, str) for item in time_list):
+        raise ValueError("time_list must be a list of strings")
+
 
 def wait_until_start_time(start_time: datetime) -> None:
     """Wait until the specified start time is reached."""
@@ -110,68 +112,83 @@ def wait_until_start_time(start_time: datetime) -> None:
     while datetime.now() < start_time:
         t.sleep(0.5)
 
+
 def find_and_click_day_element(driver: webdriver, day_to_search: int) -> None:
     """Find and click the day element after refreshing the page until it appears."""
     retry = 0
     while retry < MAX_RETRIES:
 
-            driver.refresh()
-            logging.info(f'Refreshing page (Attempt {retry + 1} of {MAX_RETRIES})')
+        driver.refresh()
+        logging.info(f'Refreshing page (Attempt {retry + 1} of {MAX_RETRIES})')
 
-            # Wait for the previous day's element to ensure the page is loaded
-            WebDriverWait(driver, TIMEOUT).until(
-                EC.presence_of_element_located((By.LINK_TEXT, str(day_to_search - 1)))
-            )
+        # Wait for the previous day's element to ensure the page is loaded
+        WebDriverWait(driver, TIMEOUT).until(
+            EC.presence_of_element_located((By.LINK_TEXT, str(day_to_search - 1)))
+        )
 
-            logging.info(f'Clicking {day_to_search} as the date')
-            elements = driver.find_elements(By.LINK_TEXT, str(day_to_search))
-            if not elements:
-                logging.warning(f"Attempt {retry} failed")
-                retry += 1
-            else:
-                elements[0].click()
-                return  # Exit the function if the element is found and clicked
+        logging.info(f'Clicking {day_to_search} as the date')
+        elements = driver.find_elements(By.LINK_TEXT, str(day_to_search))
+        if not elements:
+            logging.warning(f"Attempt {retry} failed")
+            retry += 1
+        else:
+            elements[0].click()
+            return  # Exit the function if the element is found and clicked
 
     raise Exception(f"Failed to find or click the day element after {MAX_RETRIES} retries")
 
-def book_preferred_time(driver: webdriver, time_to_book: str) -> None:
+
+def book_preferred_time(driver: webdriver, time_list: [str]) -> None:
     """Book the preferred tee time."""
     try:
         retry = 0
-        max_retry = 1600
+        max_retry = 800
         while retry < max_retry:
-            elements = driver.find_elements(By.LINK_TEXT, time_to_book)
-            if not elements:
-                #logging.warning(f"Attempt {retry + 1} failed")
+            available_time  = get_available_time(driver, time_list)
+            if not available_time:
+                #logging.info(f"Attempt {retry + 1} failed")
                 retry += 1
             else:
-                elements[0].click()
-                logging.info(f'Time Clicked: {time_to_book}')
+                element, time = available_time
+                element.click()
+                logging.info(f'Time Clicked: {time}')
                 logging.info(f'Retry Count: {retry}')
                 break
 
         if retry < max_retry:
             # Switch to the booking frame and submit the form
             driver.switch_to.frame(0)
-    
+
             retry = 0
             while retry < 100:
                 elements = driver.find_elements(By.NAME, "submit_frm_nopay")
                 if not elements:
                     retry += 1
                 else:
-                    elements[0].click()
-                    logging.info(f'Successfully booked the following time: {time_to_book}')
-                    
+                    #elements[0].click()
+                    logging.info(f'Successfully booked the following time: {time}')
+
                     break
 
         else:
             logging.info(f'Time did not appear within {max_retry} retries, most likely time was not available')
-            
+
 
     except Exception as e:
         logging.error(f"Failed to book the preferred time: {e}")
         raise
+
+
+def get_available_time(driver: webdriver, time_list: str):
+
+    for time_to_book in time_list:
+        elements = driver.find_elements(By.LINK_TEXT, time_to_book)
+        if elements:
+            return elements[0], time_to_book
+
+    return None
+
+
 
 def wait_and_book(driver: webdriver, start_time: datetime, day_to_search: int, time_to_book: str) -> None:
     """Wait until the start time, find the day element, and book the preferred tee time."""
@@ -179,9 +196,6 @@ def wait_and_book(driver: webdriver, start_time: datetime, day_to_search: int, t
     wait_until_start_time(start_time)
     find_and_click_day_element(driver, day_to_search)
     book_preferred_time(driver, time_to_book)
-
-
-
 
 
 try:
@@ -196,23 +210,17 @@ try:
 
     logging.info('Starting search for Stocky Tee Times')
 
-    data = json.loads(sys.argv[1])
-    username = data.get('username')
-    password = data.get('password')
-    time_to_book = data.get('time_to_book')
+    #data = json.loads(sys.argv[1])
+    username = 'alexhicks'
+    password = 'Spencer03'
+    time_to_book = '08:28'
+    min_time = '08:15'
+    max_time = '09:00'
 
-    login_and_setup(username, password, time_to_book)
+    login_and_setup(username, password, time_to_book, min_time, max_time)
 
 
 
 except Exception as e:
     logging.error(e)
     raise
-
-
-
-
-
-
-
-
