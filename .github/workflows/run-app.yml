@@ -99,29 +99,29 @@ jobs:
           pip install selenium webdriver-manager --no-deps
 
       # Step 11: Wait until 5:58 PM UTC before running the Python script
-      # - name: Wait until 5:58 PM UTC
-      #  run: |
+      - name: Wait until 5:58 PM UTC
+        run: |
           # Get the current UTC time in seconds since epoch
-      #    CURRENT_TIME=$(date +%s)
+          CURRENT_TIME=$(date +%s)
           
           # Set target time for 5:58 PM UTC in seconds since epoch
-      #    TARGET_HOUR=17
-      #    TARGET_MINUTE=58
-      #    TARGET_SECOND=0
-      #    TARGET_TIME=$(date -d "today ${TARGET_HOUR}:${TARGET_MINUTE}:${TARGET_SECOND}" +%s)
+          TARGET_HOUR=17
+          TARGET_MINUTE=58
+          TARGET_SECOND=0
+          TARGET_TIME=$(date -d "today ${TARGET_HOUR}:${TARGET_MINUTE}:${TARGET_SECOND}" +%s)
           
           # If the current time is after 5:58 PM, run the script immediately
-      #    if [ $CURRENT_TIME -gt $TARGET_TIME ]; then
-      #      echo "Current time ($CURRENT_TIME) is after 5:58 PM UTC. Running the script now."
-      #      exit 0  # Exit early to run the Python script immediately
-      #    fi
+          if [ $CURRENT_TIME -gt $TARGET_TIME ]; then
+            echo "Current time ($CURRENT_TIME) is after 5:58 PM UTC. Running the script now."
+            exit 0  # Exit early to run the Python script immediately
+          fi
 
           # If it's not yet 5:58 PM, calculate the wait time
-      #    WAIT_TIME=$((TARGET_TIME - CURRENT_TIME))
-      #    echo "Current time: $CURRENT_TIME, Target time: $TARGET_TIME, Waiting for $WAIT_TIME seconds."
+          WAIT_TIME=$((TARGET_TIME - CURRENT_TIME))
+          echo "Current time: $CURRENT_TIME, Target time: $TARGET_TIME, Waiting for $WAIT_TIME seconds."
           
           # Wait until the target time (5:58 PM UTC)
-      #    sleep $WAIT_TIME
+          sleep $WAIT_TIME
           
 
       # Step 12: Run Python script
