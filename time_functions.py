@@ -5,7 +5,7 @@ def day_nine_days_from_now() -> int:
     today = datetime.today()
 
     # Calculate the date 9 days from now
-    future_date = today + timedelta(days=8)
+    future_date = today + timedelta(days=9)
 
     # Format the day as 'dd'
     day_str = future_date.strftime('%d')
