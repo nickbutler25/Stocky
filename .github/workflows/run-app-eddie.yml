@@ -131,6 +131,5 @@ jobs:
       - name: Run Python script
         run: |
           # Run the second instance of the Python script with the second set of parameters
-          python program.py '{"username": "${{ vars.EDDIE_USER }}", "password": "${{ secrets.EDDIE_PASSWORD }}", "time_to_book": "${{ vars.EDDIE_SATURDAY_TIME }}"}'
-
-
+          python program.py '{"username": "${{ vars.EDDIE_USER }}", "password": "${{ secrets.EDDIE_PASSWORD }}", "time_to_book": "${{ vars.EDDIE_SATURDAY_TIME }}"
+          , "min_time": "${{ vars.SATURDAY_MIN_TIME }}", "max_time": "${{ vars.SATURDAY_MAX_TIME }}"}'
