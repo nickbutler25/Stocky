@@ -165,7 +165,7 @@ def book_preferred_time(driver: webdriver, time_list: [str]) -> None:
                 if not elements:
                     retry += 1
                 else:
-                    #elements[0].click()
+                    elements[0].click()
                     logging.info(f'Successfully booked the following time: {time}')
 
                     break
