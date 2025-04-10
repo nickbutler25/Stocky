@@ -24,7 +24,7 @@ def login_and_setup(username: str, password: str, time_to_book: str, min_time: s
     today = datetime.now().date()
     from datetime import time
     # Set the time to 6 PM (18:00)
-    six_pm = time(18, 00, 00)
+    six_pm = time(17, 00, 00)
 
     # Combine today's date with the 6 PM time to create a datetime object
     start_time = datetime.combine(today, six_pm)
