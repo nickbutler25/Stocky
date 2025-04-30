@@ -64,7 +64,7 @@ def login_and_setup(username: str, password: str, time_to_book: str, min_time: s
     driver.refresh()
 
     # ensure the login form has loaded
-    sumbitLoginButton = WebDriverWait(driver, 20).until(
+    sumbitLoginButton = WebDriverWait(driver, 40).until(
         EC.element_to_be_clickable((By.ID, "submit_auth"))
     )
 
@@ -77,7 +77,7 @@ def login_and_setup(username: str, password: str, time_to_book: str, min_time: s
 
     logging.info(f'Selecting Make Booking')
     # Select make booking
-    makeBookingButton = WebDriverWait(driver, 20).until(
+    makeBookingButton = WebDriverWait(driver, 40).until(
         EC.element_to_be_clickable((By.CSS_SELECTOR, "#fdbox_makebooking .ah_segment_frm_btn"))
     )
     makeBookingButton.click()
@@ -86,7 +86,7 @@ def login_and_setup(username: str, password: str, time_to_book: str, min_time: s
 
     logging.info(f'Waiting for dates to load')
     # Select Date
-    WebDriverWait(driver, 20).until(
+    WebDriverWait(driver, 40).until(
         EC.element_to_be_clickable((By.LINK_TEXT, str(day_to_search - 1)))
     )
     logging.info(f'Dates loaded')
