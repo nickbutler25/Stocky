@@ -65,7 +65,7 @@ def login_and_setup(username: str, password: str, time_to_book: str, min_time: s
 
     # ensure the login form has loaded
     sumbitLoginButton = WebDriverWait(driver, 40).until(
-        EC.element_to_be_clickable((By.ID, "submit_auth"))
+        EC.element_to_be_clickable((By.ID, "submit_login"))
     )
 
     # Input username and password and submit
