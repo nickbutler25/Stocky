@@ -1,10 +1,10 @@
-# Stocky Tee Time Booking Automation
+# Stockwood Vale Tee Time Booking Automation
 
-An automated golf tee time booking system for Stocky Golf Course that uses Selenium WebDriver to book preferred tee times exactly when they become available (9 days in advance).
+An automated golf tee time booking system for Stockwood Vale Golf Course that uses Selenium WebDriver to book preferred tee times exactly when they become available (9 days in advance).
 
 ## Overview
 
-This Python application automates the process of booking golf tee times at Stocky Golf Course by:
+This Python application automates the process of booking golf tee times at Stockwood Vale Golf Course by:
 - Logging into the e-s-p.com booking system
 - Waiting until the optimal time to attempt booking (using UK timezone)
 - Selecting a date 9 days in the future
@@ -24,7 +24,7 @@ This Python application automates the process of booking golf tee times at Stock
 ## Project Structure
 
 ```
-Stocky/
+Stockwood-Vale/
 ├── program.py              # Main booking automation script
 ├── time_functions.py       # Date/time helper functions
 ├── appsettings.json        # Configuration file
@@ -43,7 +43,7 @@ Stocky/
 
 1. **Login** ([program.py:22-76](program.py#L22-L76))
    - Navigates to e-s-p.com login page
-   - Sets clubid cookie to identify Stocky Golf Course
+   - Sets clubid cookie to identify Stockwood Vale Golf Course
    - Authenticates with provided credentials
 
 2. **Navigation** ([program.py:78-92](program.py#L78-L92))
@@ -89,7 +89,7 @@ Since GitHub Actions uses UTC but we need UK time, the workflow uses multiple cr
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd Stocky
+   cd Stockwood-Vale
    ```
 
 2. **Install Python dependencies**

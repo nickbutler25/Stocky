@@ -95,10 +95,10 @@ def login_and_setup(username: str, password: str, time_to_book: str, min_time: s
         login_url = "https://e-s-p.com/elitelive/login.php"
 
         logging.info(f'Attempting to Login as {username}')
-        # Open the Stocky Login page
+        # Open the Stockwood Vale Login page
         driver.get(login_url)
 
-        # Add cookie so it opens on Stocky's page
+        # Add cookie so it opens on Stockwood Vale's page
         # Same software is used for multiple courses
         cookieClubId = {
             'name': 'clubid',
@@ -270,7 +270,7 @@ try:
         ]
     )
 
-    logging.info('Starting search for Stocky Tee Times')
+    logging.info('Starting search for Stockwood Vale Tee Times')
 
     data = json.loads(sys.argv[1])
     username = data.get('username')
