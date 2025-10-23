@@ -10,10 +10,11 @@ from selenium.webdriver.common.by import By
 from collections import namedtuple
 from selenium.webdriver.support.wait import WebDriverWait
 
-from time_functions import generate_times, day_nine_days_from_now, day_eight_days_from_now
+from time_functions import generate_times, day_nine_days_from_now, day_eight_days_from_now, get_uk_now
 import sys
 import json
 import os
+import pytz
 
 # Load configuration from appsettings.json
 def load_config():
@@ -58,14 +59,18 @@ BOOKING_START_MINUTE = config.get('BookingStartMinute', 0)  # Minute to start at
 
 
 def login_and_setup(username: str, password: str, time_to_book: str, min_time: str, max_time : str):
-    # Get today's date in UTC (GMT is the same as UTC)
-    today = datetime.now().date()
+    # Get current UK time (handles BST/GMT automatically)
+    uk_tz = pytz.timezone('Europe/London')
+    uk_now = get_uk_now()
+    today_uk = uk_now.date()
+
     from datetime import time
     # Set the booking start time from configuration
     booking_time = time(BOOKING_START_HOUR, BOOKING_START_MINUTE, 0)
 
-    # Combine today's date with the booking time to create a datetime object
-    start_time = datetime.combine(today, booking_time)
+    # Combine today's UK date with the booking time to create a timezone-aware datetime
+    start_time_naive = datetime.combine(today_uk, booking_time)
+    start_time = uk_tz.localize(start_time_naive)
 
     day_to_search = day_nine_days_from_now()
     day_before_search = day_eight_days_from_now()
@@ -154,10 +159,18 @@ def validate_inputs(start_time: datetime, day_to_search: int, day_before_search:
 
 
 def wait_until_start_time(start_time: datetime) -> None:
-    """Wait until the specified start time is reached."""
-    logging.info(f'Waiting for start time of {start_time}')
-    logging.info(f'Time now of {datetime.now()}')
-    while datetime.now() < start_time:
+    """
+    Wait until the specified start time is reached in UK timezone.
+
+    Args:
+        start_time: Timezone-aware datetime in UK timezone
+    """
+    logging.info(f'Waiting for start time of {start_time.strftime("%Y-%m-%d %H:%M:%S %Z")}')
+
+    current_uk_time = get_uk_now()
+    logging.info(f'Current UK time: {current_uk_time.strftime("%Y-%m-%d %H:%M:%S %Z")}')
+
+    while get_uk_now() < start_time:
         t.sleep(0.5)
 
 

@@ -6,10 +6,12 @@ An automated golf tee time booking system for Stocky Golf Course that uses Selen
 
 This Python application automates the process of booking golf tee times at Stocky Golf Course by:
 - Logging into the e-s-p.com booking system
-- Waiting until the optimal time to attempt booking
+- Waiting until the optimal time to attempt booking (using UK timezone)
 - Selecting a date 9 days in the future
 - Attempting to book the preferred time slot (or nearby alternatives)
 - Running automatically via GitHub Actions on scheduled days
+
+**Important**: All times use UK timezone (Europe/London) and automatically handle BST/GMT transitions. The application works correctly regardless of where it runs (local machine, GitHub Actions, etc.).
 
 ## Features
 
@@ -63,9 +65,11 @@ Stocky/
 
 The workflows run on:
 - **Days**: Thursdays and Fridays
-- **Time**: 5:30 PM UTC (4:30 PM GMT in winter, 5:30 PM BST in summer)
+- **Time**: 5:30 PM UTC (workflow trigger time)
 - **Wait Until**: 5:58 PM UTC before executing the booking script
-- **Booking Time**: 6:00 PM UTC (when new slots become available)
+- **Booking Time**: 6:00 PM UK time (when new slots become available)
+
+**Note**: GitHub Actions runs in UTC, but the script automatically converts to UK timezone internally. Tee times become available at 6:00 PM UK time (18:00 BST/GMT).
 
 ## Setup & Installation
 
@@ -127,8 +131,13 @@ The application uses [appsettings.json](appsettings.json) for configuration. All
 | `WebDriverTimeout` | 10 | WebDriver wait timeout in seconds |
 | `MaxPageRetries` | 20 | Maximum page refresh attempts when searching for dates |
 | `ClubId` | "1574" | Golf course club ID for e-s-p.com booking system |
-| `BookingStartHour` | 18 | Hour (24-hour format) to begin booking attempts |
-| `BookingStartMinute` | 0 | Minute to begin booking attempts |
+| `BookingStartHour` | 18 | Hour (24-hour format) to begin booking attempts **in UK timezone** |
+| `BookingStartMinute` | 0 | Minute to begin booking attempts **in UK timezone** |
+
+**Timezone Handling**: All times are interpreted in UK timezone (Europe/London). The system automatically handles:
+- British Summer Time (BST) - UTC+1 (March to October)
+- Greenwich Mean Time (GMT) - UTC+0 (October to March)
+- Works correctly whether running locally (any timezone) or on GitHub Actions (UTC)
 
 **Local Overrides**: Create `appsettings.local.json` to override settings without modifying the base config:
 ```json
