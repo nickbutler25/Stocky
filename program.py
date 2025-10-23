@@ -10,7 +10,7 @@ from selenium.webdriver.common.by import By
 from collections import namedtuple
 from selenium.webdriver.support.wait import WebDriverWait
 
-from time_functions import generate_times, day_nine_days_from_now
+from time_functions import generate_times, day_nine_days_from_now, day_eight_days_from_now
 import sys
 import json
 
@@ -24,12 +24,13 @@ def login_and_setup(username: str, password: str, time_to_book: str, min_time: s
     today = datetime.now().date()
     from datetime import time
     # Set the time to 6 PM (18:00)
-    six_pm = time(17, 00, 00)
+    six_pm = time(18, 00, 00)
 
     # Combine today's date with the 6 PM time to create a datetime object
     start_time = datetime.combine(today, six_pm)
 
     day_to_search = day_nine_days_from_now()
+    day_before_search = day_eight_days_from_now()
 
     time_list = generate_times(time_to_book, min_time, max_time)
 
@@ -45,61 +46,70 @@ def login_and_setup(username: str, password: str, time_to_book: str, min_time: s
 
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
-    # website details
-    # login_url = "https://e-s-p.com//elitelive/selectsite.php"
-    login_url = "https://e-s-p.com/elitelive/login.php"
+    try:
+        # website details
+        # login_url = "https://e-s-p.com//elitelive/selectsite.php"
+        login_url = "https://e-s-p.com/elitelive/login.php"
 
-    logging.info(f'Attempting to Login as {username}')
-    # Open the Stocky Login page
-    driver.get(login_url)
+        logging.info(f'Attempting to Login as {username}')
+        # Open the Stocky Login page
+        driver.get(login_url)
 
-    # Add cookie so it opens on Stocky's page
-    # Same software is used for multiple courses
-    cookieClubId = {
-        'name': 'clubid',
-        'value': '1574',
-        'domain': '.e-s-p.com'  # Make sure this matches the domain you are working with
-    }
-    driver.add_cookie(cookieClubId)
-    driver.refresh()
+        # Add cookie so it opens on Stocky's page
+        # Same software is used for multiple courses
+        cookieClubId = {
+            'name': 'clubid',
+            'value': '1574',
+            'domain': '.e-s-p.com'  # Make sure this matches the domain you are working with
+        }
+        driver.add_cookie(cookieClubId)
+        driver.refresh()
 
-    # ensure the login form has loaded
-    sumbitLoginButton = WebDriverWait(driver, 40).until(
-        EC.element_to_be_clickable((By.ID, "submit_login"))
-    )
+        # ensure the login form has loaded
+        sumbitLoginButton = WebDriverWait(driver, 40).until(
+            EC.element_to_be_clickable((By.ID, "submit_login"))
+        )
 
-    # Input username and password and submit
-    driver.find_element(By.ID, "username_field").send_keys(username)
-    driver.find_element(By.ID, "password_field").send_keys(password)
-    sumbitLoginButton.click()
+        # Input username and password and submit
+        driver.find_element(By.ID, "username_field").send_keys(username)
+        driver.find_element(By.ID, "password_field").send_keys(password)
+        sumbitLoginButton.click()
 
-    logging.info(f'Logged in Successfully')
+        logging.info(f'Logged in Successfully')
 
-    logging.info(f'Selecting Make Booking')
-    # Select make booking
-    makeBookingButton = WebDriverWait(driver, 40).until(
-        EC.element_to_be_clickable((By.CSS_SELECTOR, "#fdbox_makebooking .ah_segment_frm_btn"))
-    )
-    makeBookingButton.click()
-    driver.find_element(By.NAME, "Submit").click()
-    logging.info(f'Make booking selected')
+        logging.info(f'Selecting Make Booking')
+        # Select make booking
+        makeBookingButton = WebDriverWait(driver, 40).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, "#fdbox_makebooking .ah_segment_frm_btn"))
+        )
+        makeBookingButton.click()
+        driver.find_element(By.NAME, "Submit").click()
+        logging.info(f'Make booking selected')
 
-    logging.info(f'Waiting for dates to load')
-    # Select Date
-    WebDriverWait(driver, 40).until(
-        EC.element_to_be_clickable((By.LINK_TEXT, str(day_to_search - 1)))
-    )
-    logging.info(f'Dates loaded')
-    wait_and_book(driver, start_time, day_to_search, time_list)
+        logging.info(f'Waiting for dates to load')
+        # Wait for calendar to load by checking for the previous day
+        # This properly handles month boundaries (e.g., Oct 31 before Nov 1)
+        WebDriverWait(driver, 40).until(
+            EC.element_to_be_clickable((By.LINK_TEXT, str(day_before_search)))
+        )
+        logging.info(f'Dates loaded')
+        wait_and_book(driver, start_time, day_to_search, day_before_search, time_list)
+    finally:
+        # Always close the browser, even if an error occurs
+        logging.info('Closing browser')
+        driver.quit()
 
 
-def validate_inputs(start_time: datetime, day_to_search: int, time_list: list) -> None:
+def validate_inputs(start_time: datetime, day_to_search: int, day_before_search: int, time_list: list) -> None:
     """Validate the inputs to ensure they are in the correct format."""
     if not isinstance(start_time, datetime):
         raise ValueError("start_time must be a datetime object")
 
     if not isinstance(day_to_search, int) or day_to_search < 1 or day_to_search > 31:
         raise ValueError("day_to_search must be an integer between 1 and 31")
+
+    if not isinstance(day_before_search, int) or day_before_search < 1 or day_before_search > 31:
+        raise ValueError("day_before_search must be an integer between 1 and 31")
 
     if not isinstance(time_list, list) or not all(isinstance(item, str) for item in time_list):
         raise ValueError("time_list must be a list of strings")
@@ -113,7 +123,7 @@ def wait_until_start_time(start_time: datetime) -> None:
         t.sleep(0.5)
 
 
-def find_and_click_day_element(driver: webdriver, day_to_search: int) -> None:
+def find_and_click_day_element(driver: webdriver, day_to_search: int, day_before_search: int) -> None:
     """Find and click the day element after refreshing the page until it appears."""
     retry = 0
     while retry < MAX_RETRIES:
@@ -122,8 +132,9 @@ def find_and_click_day_element(driver: webdriver, day_to_search: int) -> None:
         logging.info(f'Refreshing page (Attempt {retry + 1} of {MAX_RETRIES})')
 
         # Wait for the previous day's element to ensure the page is loaded
+        # This properly handles month boundaries (e.g., Oct 31 before Nov 1)
         WebDriverWait(driver, TIMEOUT).until(
-            EC.presence_of_element_located((By.LINK_TEXT, str(day_to_search - 1)))
+            EC.presence_of_element_located((By.LINK_TEXT, str(day_before_search)))
         )
 
         logging.info(f'Clicking {day_to_search} as the date')
@@ -190,11 +201,11 @@ def get_available_time(driver: webdriver, time_list: str):
 
 
 
-def wait_and_book(driver: webdriver, start_time: datetime, day_to_search: int, time_to_book: str) -> None:
+def wait_and_book(driver: webdriver, start_time: datetime, day_to_search: int, day_before_search: int, time_to_book: str) -> None:
     """Wait until the start time, find the day element, and book the preferred tee time."""
-    validate_inputs(start_time, day_to_search, time_to_book)
+    validate_inputs(start_time, day_to_search, day_before_search, time_to_book)
     wait_until_start_time(start_time)
-    find_and_click_day_element(driver, day_to_search)
+    find_and_click_day_element(driver, day_to_search, day_before_search)
     book_preferred_time(driver, time_to_book)
 
 

@@ -1,16 +1,45 @@
 from datetime import datetime, timedelta
 
 def day_nine_days_from_now() -> int:
+    """
+    Calculate the day number 9 days from now.
+
+    Returns:
+        int: The day of the month (1-31) for the date 9 days in the future.
+
+    Note: This function properly handles month boundaries. For example:
+        - Jan 25 + 9 days = Feb 3 (returns 3)
+        - Dec 28 + 9 days = Jan 6 next year (returns 6)
+    """
     # Get today's date
     today = datetime.today()
 
     # Calculate the date 9 days from now
     future_date = today + timedelta(days=9)
 
-    # Format the day as 'dd'
-    day_str = future_date.strftime('%d')
+    # Return the day of the month (1-31)
+    # The .day property automatically handles month boundaries correctly
+    return future_date.day
 
-    return int(day_str)
+def day_eight_days_from_now() -> int:
+    """
+    Calculate the day number 8 days from now (one day before the booking target).
+
+    This is used to verify the calendar has loaded before attempting to click
+    the target date. It properly handles month boundaries.
+
+    Returns:
+        int: The day of the month (1-31) for the date 8 days in the future.
+
+    Examples:
+        - If today is Oct 23 and target is Nov 1 (9 days):
+          This returns Oct 31 (8 days) = 31
+        - If today is Jan 24 and target is Feb 2 (9 days):
+          This returns Feb 1 (8 days) = 1
+    """
+    today = datetime.today()
+    future_date = today + timedelta(days=8)
+    return future_date.day
 
 def generate_times(preferred_time: str, min_time: str, max_time: str):
     def time_to_minutes(time_str: str) -> int:
