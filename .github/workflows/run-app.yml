@@ -2,7 +2,14 @@ name: Run Stocky Tee Times Daily - Mad Al
 
 on:
   schedule:
-    - cron: '30 16 * * 4,5'  # Runs at 5:30 PM UTC on Thursdays and Fridays
+    # Run at 5:30 PM UK time on Thursdays and Fridays
+    # Two schedules needed because UK switches between BST (UTC+1) and GMT (UTC+0)
+    # BST: Last Sunday in March to last Sunday in October (UTC+1)
+    # GMT: Last Sunday in October to last Sunday in March (UTC+0)
+    - cron: '30 16 * 4-10 4,5'  # 4:30 PM UTC = 5:30 PM BST (April-October, definitely BST)
+    - cron: '30 17 * 11-12,1-2 4,5'  # 5:30 PM UTC = 5:30 PM GMT (November-February, definitely GMT)
+    # March is transition month - using BST time (may be 1 hour early on first few Thursdays/Fridays)
+    - cron: '30 16 * 3 4,5'  # March: using BST schedule (transition happens late March)
   workflow_dispatch:  # Allows manual triggering
 
 jobs:
@@ -31,31 +38,40 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # Wait until 5:58 PM UTC before running the Python script
-      - name: Wait until 5:58 PM UTC
+      # Wait until 5:58 PM UK time before running the Python script
+      - name: Wait until 5:58 PM UK time
         run: |
-          # Get the current UTC time in seconds since epoch
+          # Install TZ data for timezone conversion
+          sudo apt-get update -qq && sudo apt-get install -y tzdata
+
+          # Get current time in UK timezone
+          export TZ='Europe/London'
+          CURRENT_UK_TIME=$(date '+%Y-%m-%d %H:%M:%S %Z')
+          echo "Current UK time: $CURRENT_UK_TIME"
+
+          # Get current time in seconds since epoch
           CURRENT_TIME=$(date +%s)
-          
-          # Set target time for 5:58 PM UTC in seconds since epoch
-          TARGET_HOUR=16
-          TARGET_MINUTE=58
-          TARGET_SECOND=0
-          TARGET_TIME=$(date -d "today ${TARGET_HOUR}:${TARGET_MINUTE}:${TARGET_SECOND}" +%s)
-          
-          # If the current time is after 5:58 PM, run the script immediately
+
+          # Calculate target time: 5:58 PM UK time (17:58)
+          # Note: date command with TZ set will handle BST/GMT automatically
+          TARGET_TIME=$(TZ='Europe/London' date -d "today 17:58:00" +%s)
+
+          # If target time is in the past (already passed today), don't wait
           if [ $CURRENT_TIME -gt $TARGET_TIME ]; then
-            echo "Current time ($CURRENT_TIME) is after 5:58 PM UTC. Running the script now."
-            exit 0  # Exit early to run the Python script immediately
+            echo "Current time is after 5:58 PM UK time. Running script immediately."
+            exit 0
           fi
 
-          # If it's not yet 5:58 PM, calculate the wait time
+          # Calculate wait time in seconds
           WAIT_TIME=$((TARGET_TIME - CURRENT_TIME))
-          echo "Current time: $CURRENT_TIME, Target time: $TARGET_TIME, Waiting for $WAIT_TIME seconds."
-          
-          # Wait until the target time (5:58 PM UTC)
+          WAIT_MINUTES=$((WAIT_TIME / 60))
+
+          echo "Target time: 5:58 PM UK (17:58 Europe/London)"
+          echo "Waiting for $WAIT_TIME seconds ($WAIT_MINUTES minutes)"
+
+          # Wait until 5:58 PM UK time
           sleep $WAIT_TIME
-          
+
 
       # Run Python script
       - name: Run Python script

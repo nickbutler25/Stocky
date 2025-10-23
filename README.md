@@ -65,11 +65,22 @@ Stocky/
 
 The workflows run on:
 - **Days**: Thursdays and Fridays
-- **Time**: 5:30 PM UTC (workflow trigger time)
-- **Wait Until**: 5:58 PM UTC before executing the booking script
-- **Booking Time**: 6:00 PM UK time (when new slots become available)
+- **Trigger Time**: 5:30 PM UK time (17:30 Europe/London)
+- **Wait Until**: 5:58 PM UK time (17:58 Europe/London)
+- **Booking Time**: 6:00 PM UK time (18:00 Europe/London - when new slots become available)
 
-**Note**: GitHub Actions runs in UTC, but the script automatically converts to UK timezone internally. Tee times become available at 6:00 PM UK time (18:00 BST/GMT).
+**Cron Schedule (UTC-based)**:
+Since GitHub Actions uses UTC but we need UK time, the workflow uses multiple cron schedules:
+- **April-October**: `30 16 * 4-10 4,5` (4:30 PM UTC = 5:30 PM BST)
+- **November-February**: `30 17 * 11-12,1-2 4,5` (5:30 PM UTC = 5:30 PM GMT)
+- **March**: `30 16 * 3 4,5` (transition month, may trigger 1 hour early before BST starts)
+
+**Timezone Handling**:
+- BST (British Summer Time): Last Sunday in March to last Sunday in October (UTC+1)
+- GMT (Greenwich Mean Time): Last Sunday in October to last Sunday in March (UTC+0)
+- Workflows install `tzdata` and use `TZ='Europe/London'` for accurate time calculations
+- Wait step automatically converts to UK time regardless of BST/GMT
+- Script execution begins at exactly 5:58 PM UK time
 
 ## Setup & Installation
 
