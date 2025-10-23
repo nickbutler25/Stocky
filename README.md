@@ -25,11 +25,13 @@ This Python application automates the process of booking golf tee times at Stock
 Stocky/
 ├── program.py              # Main booking automation script
 ├── time_functions.py       # Date/time helper functions
+├── appsettings.json        # Configuration file
 ├── requirements.txt        # Python dependencies
 ├── .github/
 │   └── workflows/
 │       ├── run-app.yml        # Workflow for user 1
 │       └── run-app-eddie.yml  # Workflow for user 2
+├── .gitignore
 └── README.md
 ```
 
@@ -116,13 +118,27 @@ The workflows run on:
 | `min_time` | Earliest acceptable time | `"09:00"` |
 | `max_time` | Latest acceptable time | `"11:00"` |
 
-### Environment Variables (in code)
+### Application Settings (appsettings.json)
 
-| Constant | Location | Default | Description |
-|----------|----------|---------|-------------|
-| `TIMEOUT` | [program.py:17](program.py#L17) | 10 | WebDriver wait timeout (seconds) |
-| `MAX_RETRIES` | [program.py:18](program.py#L18) | 20 | Max page refresh attempts |
-| `start_time` | [program.py:27-30](program.py#L27-L30) | 17:00 | Time to begin booking attempt |
+The application uses [appsettings.json](appsettings.json) for configuration. All settings have sensible defaults.
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `WebDriverTimeout` | 10 | WebDriver wait timeout in seconds |
+| `MaxPageRetries` | 20 | Maximum page refresh attempts when searching for dates |
+| `ClubId` | "1574" | Golf course club ID for e-s-p.com booking system |
+| `BookingStartHour` | 18 | Hour (24-hour format) to begin booking attempts |
+| `BookingStartMinute` | 0 | Minute to begin booking attempts |
+
+**Local Overrides**: Create `appsettings.local.json` to override settings without modifying the base config:
+```json
+{
+  "BookingStartHour": 17,
+  "BookingStartMinute": 30,
+  "MaxPageRetries": 30
+}
+```
+Note: `appsettings.local.json` is gitignored and won't be committed.
 
 ## Dependencies
 
@@ -146,10 +162,8 @@ Log levels:
 
 ## Known Limitations
 
-1. **Date Boundary Issues**: The 9-day calculation uses day-of-month only, which may cause issues at month boundaries
-2. **Single Course**: Currently hardcoded for Stocky (clubid: 1574)
-3. **Fixed Retry Count**: 800 retries for finding available times (no overall timeout)
-4. **Chrome Version**: GitHub workflow has hardcoded ChromeDriver version (132.0.6834.110)
+1. **Fixed Retry Count**: 800 retries for finding available times (no overall timeout)
+2. **Single Booking System**: Designed specifically for e-s-p.com booking platform
 
 ## Troubleshooting
 
@@ -164,9 +178,10 @@ Log levels:
 - Widen `min_time` and `max_time` range
 - Try different days (less competition)
 
-**ChromeDriver version mismatch**
-- Update the hardcoded version in `.github/workflows/run-app.yml`
-- Or switch to using webdriver-manager in the workflow
+**Configuration issues**
+- Check `appsettings.json` exists in the project root
+- Verify JSON syntax is valid (use a JSON validator)
+- Check file permissions if running locally
 
 **GitHub Action fails**
 - Check secrets and variables are correctly set
@@ -176,14 +191,13 @@ Log levels:
 ## Future Improvements
 
 Potential enhancements:
-- [ ] Dynamic ChromeDriver version management in GitHub Actions
-- [ ] Configurable start time via environment variables
-- [ ] Better date calculation handling month boundaries
 - [ ] Overall booking timeout protection
-- [ ] Support for multiple golf courses
+- [ ] Support for multiple golf courses (multiple club IDs)
 - [ ] Email/SMS notifications on success/failure
 - [ ] Unit tests for time generation logic
 - [ ] Docker containerization
+- [ ] Retry backoff strategy for network failures
+- [ ] Health check endpoint for monitoring
 
 ## License
 

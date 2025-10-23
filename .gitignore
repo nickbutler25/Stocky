@@ -3,3 +3,12 @@ modules.xml
 profiles_settings.xml
 Stocky.iml
 vcs.xml
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.log
+
+# Local configuration override (optional)
+appsettings.local.json

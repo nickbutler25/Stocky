@@ -13,9 +13,47 @@ from selenium.webdriver.support.wait import WebDriverWait
 from time_functions import generate_times, day_nine_days_from_now, day_eight_days_from_now
 import sys
 import json
+import os
 
-TIMEOUT = 10  # Timeout for WebDriverWait
-MAX_RETRIES = 20  # Maximum number of retries for finding the day element
+# Load configuration from appsettings.json
+def load_config():
+    """
+    Load configuration from appsettings.json file.
+
+    Supports local overrides via appsettings.local.json which takes precedence.
+    This allows developers to customize settings without modifying the base config.
+    """
+    script_dir = os.path.dirname(__file__) if __file__ else '.'
+    base_config_path = os.path.join(script_dir, 'appsettings.json')
+    local_config_path = os.path.join(script_dir, 'appsettings.local.json')
+
+    config = {}
+
+    # Load base configuration
+    try:
+        with open(base_config_path, 'r') as f:
+            config = json.load(f)
+    except FileNotFoundError:
+        pass  # Will use defaults
+
+    # Load local overrides if they exist
+    try:
+        with open(local_config_path, 'r') as f:
+            local_config = json.load(f)
+            config.update(local_config)  # Local settings override base settings
+    except FileNotFoundError:
+        pass  # Local config is optional
+
+    return config
+
+config = load_config()
+
+# Configuration constants - loaded from appsettings.json with fallback defaults
+TIMEOUT = config.get('WebDriverTimeout', 10)  # Timeout for WebDriverWait in seconds
+MAX_RETRIES = config.get('MaxPageRetries', 20)  # Maximum number of retries for finding the day element
+CLUB_ID = config.get('ClubId', '1574')  # Golf course club ID for e-s-p.com system
+BOOKING_START_HOUR = config.get('BookingStartHour', 18)  # Hour to start attempting booking (24-hour format)
+BOOKING_START_MINUTE = config.get('BookingStartMinute', 0)  # Minute to start attempting booking
 
 
 
@@ -23,11 +61,11 @@ def login_and_setup(username: str, password: str, time_to_book: str, min_time: s
     # Get today's date in UTC (GMT is the same as UTC)
     today = datetime.now().date()
     from datetime import time
-    # Set the time to 6 PM (18:00)
-    six_pm = time(18, 00, 00)
+    # Set the booking start time from configuration
+    booking_time = time(BOOKING_START_HOUR, BOOKING_START_MINUTE, 0)
 
-    # Combine today's date with the 6 PM time to create a datetime object
-    start_time = datetime.combine(today, six_pm)
+    # Combine today's date with the booking time to create a datetime object
+    start_time = datetime.combine(today, booking_time)
 
     day_to_search = day_nine_days_from_now()
     day_before_search = day_eight_days_from_now()
@@ -59,7 +97,7 @@ def login_and_setup(username: str, password: str, time_to_book: str, min_time: s
         # Same software is used for multiple courses
         cookieClubId = {
             'name': 'clubid',
-            'value': '1574',
+            'value': CLUB_ID,
             'domain': '.e-s-p.com'  # Make sure this matches the domain you are working with
         }
         driver.add_cookie(cookieClubId)
