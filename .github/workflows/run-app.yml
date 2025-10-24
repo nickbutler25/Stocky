@@ -39,7 +39,38 @@ jobs:
           pip install -r requirements.txt
 
       # Wait until 5:58 PM UK time before running the Python script
+      - name: Wait until 5:58 PM UK time
+        run: |
+          # Install TZ data for timezone conversion
+          sudo apt-get update -qq && sudo apt-get install -y tzdata
 
+          # Get current time in UK timezone
+          export TZ='Europe/London'
+          CURRENT_UK_TIME=$(date '+%Y-%m-%d %H:%M:%S %Z')
+          echo "Current UK time: $CURRENT_UK_TIME"
+
+          # Get current time in seconds since epoch
+          CURRENT_TIME=$(date +%s)
+
+          # Calculate target time: 5:58 PM UK time (17:58)
+          # Note: date command with TZ set will handle BST/GMT automatically
+          TARGET_TIME=$(TZ='Europe/London' date -d "today 17:58:00" +%s)
+
+          # If target time is in the past (already passed today), don't wait
+          if [ $CURRENT_TIME -gt $TARGET_TIME ]; then
+            echo "Current time is after 5:58 PM UK time. Running script immediately."
+            exit 0
+          fi
+
+          # Calculate wait time in seconds
+          WAIT_TIME=$((TARGET_TIME - CURRENT_TIME))
+          WAIT_MINUTES=$((WAIT_TIME / 60))
+
+          echo "Target time: 5:58 PM UK (17:58 Europe/London)"
+          echo "Waiting for $WAIT_TIME seconds ($WAIT_MINUTES minutes)"
+
+          # Wait until 5:58 PM UK time
+          sleep $WAIT_TIME
 
 
       # Run Python script
