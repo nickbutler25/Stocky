@@ -170,8 +170,8 @@ def wait_until_start_time(start_time: datetime) -> None:
     current_uk_time = get_uk_now()
     logging.info(f'Current UK time: {current_uk_time.strftime("%Y-%m-%d %H:%M:%S %Z")}')
 
-    #while get_uk_now() < start_time:
-    #    t.sleep(0.5)
+    while get_uk_now() < start_time:
+        t.sleep(0.5)
 
 
 def find_and_click_day_element(driver: webdriver, day_to_search: int, day_before_search: int) -> None:
