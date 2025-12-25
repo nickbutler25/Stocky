@@ -126,7 +126,13 @@ def login_and_setup(username: str, password: str, time_to_book: str, min_time: s
             EC.element_to_be_clickable((By.CSS_SELECTOR, "#fdbox_makebooking .ah_segment_frm_btn"))
         )
         makeBookingButton.click()
-        driver.find_element(By.NAME, "Submit").click()
+
+        # Wait for Submit button to be clickable after the booking form loads
+        # Poll every 200ms for faster detection
+        submitButton = WebDriverWait(driver, 40, poll_frequency=0.2).until(
+            EC.element_to_be_clickable((By.NAME, "Submit"))
+        )
+        submitButton.click()
         logging.info(f'Make booking selected')
 
         logging.info(f'Waiting for dates to load')
