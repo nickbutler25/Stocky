@@ -1,8 +1,10 @@
+# IDE files (PyCharm/IntelliJ)
 misc.xml
 modules.xml
 profiles_settings.xml
 Stocky.iml
 vcs.xml
+.idea/
 
 # Python
 __pycache__/
@@ -10,5 +12,18 @@ __pycache__/
 *.pyo
 *.log
 
+# Virtual environments
+venv/
+env/
+.venv/
+ENV/
+
 # Local configuration override (optional)
 appsettings.local.json
+
+# Claude Code local settings
+.claude/
+
+# OS files
+.DS_Store
+Thumbs.db
