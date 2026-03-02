@@ -29,8 +29,9 @@ python program.py '{"username": "user@email.com", "password": "pass", "time_to_b
 - Run locally with shorter wait times by modifying `BookingStartHour` in `appsettings.local.json`
 
 ### GitHub Actions
-- Workflows run automatically via cron schedules on Thursdays and Fridays at 5:30 PM UK time
-- Manual trigger available via GitHub Actions UI → "Run workflow" button
+- Single workflow (`run-app.yml`) runs daily at 5:00 PM UK time and checks `BOOKING_DAYS` variable to decide whether to proceed
+- Currently configured to run Monday, Tuesday, Thursday, and Friday
+- Manual trigger available via GitHub Actions UI → "Run workflow" button (always runs regardless of `BOOKING_DAYS`)
 - Check logs in the Actions tab for debugging failed runs
 
 ## Architecture
@@ -109,19 +110,45 @@ Developer override file that merges with base config. Useful for testing with di
 - Google Chrome installed via .deb package
 - tzdata package for timezone conversions
 
+### Users
+Three users run in parallel, each with an independent on/off switch:
+- **Mad Al** (`MAD_AL_USER`) — always runs when the workflow runs
+- **Eddie** (`EDDIE_USER`) — gated by `EDDIE_SHOULD_RUN == 'true'`
+- **Eric** (`ERIC_USER`) — gated by `ERIC_SHOULD_RUN == 'true'`
+
 ### Secrets & Variables
 **Secrets** (Settings → Secrets and variables → Actions):
-- `MAD_AL_PASSWORD`, `EDDIE_PASSWORD`: User passwords
+- `MAD_AL_PASSWORD`, `EDDIE_PASSWORD`, `ERIC_PASSWORD`: User passwords
 
 **Variables**:
-- `MAD_AL_USER`, `EDDIE_USER`: Usernames
-- `SATURDAY_TIME`: Preferred booking time (e.g., "10:00")
-- `SATURDAY_MIN_TIME`, `SATURDAY_MAX_TIME`: Acceptable time range
+- `MAD_AL_USER`, `EDDIE_USER`, `ERIC_USER`: Usernames
+- `EDDIE_SHOULD_RUN`, `ERIC_SHOULD_RUN`: Enable/disable individual users (`true`/`false`)
+- `BOOKING_DAYS`: Comma-separated list of days the workflow should book on (e.g. `Monday,Tuesday,Thursday,Friday`)
+- Per-user, per-booked-day time variables (named by the day being **booked**, not the day the script runs):
+  - `{USER}_{DAY}_TIME`: Preferred tee time (e.g. `MAD_AL_SATURDAY_TIME`)
+  - `{USER}_{DAY}_MIN_TIME`: Earliest acceptable time
+  - `{USER}_{DAY}_MAX_TIME`: Latest acceptable time
+
+**Run day → booked day mapping** (9 days ahead):
+
+| Run day | Books for |
+|---|---|
+| Monday | Wednesday |
+| Tuesday | Thursday |
+| Wednesday | Friday |
+| Thursday | Saturday |
+| Friday | Sunday |
+| Saturday | Monday |
+| Sunday | Tuesday |
+
+### Workflow Jobs
+1. **`check-day`**: Checks if today's UK day is in `BOOKING_DAYS`. Always passes on `workflow_dispatch`.
+2. **`run-booking`**: Runs only if `check-day` passes. Sets day-specific times, waits until 5:58 PM UK time, then launches all enabled user scripts in parallel.
 
 ### Workflow Timing
-- Triggers at 5:30 PM UK time via multiple cron schedules (handles BST/GMT)
-- Waits until 5:58 PM UK time before executing script
-- Script begins attempting bookings, ready for 6:00 PM slot release
+- Triggers at 5:00 PM UK time daily via multiple cron schedules (handles BST/GMT)
+- Waits until 5:58 PM UK time before executing scripts
+- Scripts begin attempting bookings, ready for 6:00 PM slot release
 
 ## Common Pitfalls
 

@@ -31,8 +31,7 @@ Stockwood-Vale/
 ├── requirements.txt        # Python dependencies
 ├── .github/
 │   └── workflows/
-│       ├── run-app.yml        # Workflow for user 1
-│       └── run-app-eddie.yml  # Workflow for user 2
+│       └── run-app.yml     # Combined workflow for all users
 ├── .gitignore
 └── README.md
 ```
@@ -63,17 +62,18 @@ Stockwood-Vale/
 
 ### GitHub Actions Schedule
 
-The workflows run on:
-- **Days**: Thursdays and Fridays
-- **Trigger Time**: 5:30 PM UK time (17:30 Europe/London)
+The workflow runs daily and checks the `BOOKING_DAYS` variable to decide whether to proceed:
+- **Trigger Time**: 5:00 PM UK time (17:00 Europe/London)
 - **Wait Until**: 5:58 PM UK time (17:58 Europe/London)
 - **Booking Time**: 6:00 PM UK time (18:00 Europe/London - when new slots become available)
+- **Active days**: Controlled by the `BOOKING_DAYS` repository variable (e.g. `Monday,Tuesday,Thursday,Friday`)
+- **Manual trigger**: Always runs regardless of `BOOKING_DAYS`
 
 **Cron Schedule (UTC-based)**:
 Since GitHub Actions uses UTC but we need UK time, the workflow uses multiple cron schedules:
-- **April-October**: `30 16 * 4-10 4,5` (4:30 PM UTC = 5:30 PM BST)
-- **November-February**: `30 17 * 11-12,1-2 4,5` (5:30 PM UTC = 5:30 PM GMT)
-- **March**: `30 16 * 3 4,5` (transition month, may trigger 1 hour early before BST starts)
+- **April-October**: `0 16 * 4-10 *` (4:00 PM UTC = 5:00 PM BST)
+- **November-February**: `0 17 * 11-12,1-2 *` (5:00 PM UTC = 5:00 PM GMT)
+- **March**: `0 16 * 3 *` (transition month, may trigger 1 hour early before BST starts)
 
 **Timezone Handling**:
 - BST (British Summer Time): Last Sunday in March to last Sunday in October (UTC+1)
@@ -109,17 +109,20 @@ Since GitHub Actions uses UTC but we need UK time, the workflow uses multiple cr
 ### GitHub Actions Setup
 
 1. **Configure Repository Secrets** (Settings → Secrets and variables → Actions)
-   - `MAD_AL_PASSWORD`: Password for user 1
-   - `EDDIE_PASSWORD`: Password for user 2
+   - `MAD_AL_PASSWORD`: Password for Mad Al
+   - `EDDIE_PASSWORD`: Password for Eddie
+   - `ERIC_PASSWORD`: Password for Eric
 
 2. **Configure Repository Variables**
-   - `MAD_AL_USER`: Username for user 1
-   - `EDDIE_USER`: Username for user 2
-   - `SATURDAY_TIME`: Preferred booking time (e.g., "10:00")
-   - `SATURDAY_MIN_TIME`: Minimum acceptable time (e.g., "09:00")
-   - `SATURDAY_MAX_TIME`: Maximum acceptable time (e.g., "11:00")
+   - `MAD_AL_USER`, `EDDIE_USER`, `ERIC_USER`: Usernames
+   - `EDDIE_SHOULD_RUN`, `ERIC_SHOULD_RUN`: Enable/disable individual users (`true`/`false`)
+   - `BOOKING_DAYS`: Comma-separated days to run on (e.g. `Monday,Tuesday,Thursday,Friday`)
+   - Per-user, per-booked-day time variables named by the day being **booked** (9 days ahead):
+     - `{USER}_{DAY}_TIME`: Preferred tee time (e.g. `MAD_AL_SATURDAY_TIME = 09:04`)
+     - `{USER}_{DAY}_MIN_TIME`: Earliest acceptable time (e.g. `MAD_AL_SATURDAY_MIN_TIME = 08:30`)
+     - `{USER}_{DAY}_MAX_TIME`: Latest acceptable time (e.g. `MAD_AL_SATURDAY_MAX_TIME = 09:30`)
 
-3. **Workflows automatically run on schedule** or can be triggered manually via the Actions tab
+3. **Workflow automatically runs on schedule** or can be triggered manually via the Actions tab
 
 ## Configuration
 
