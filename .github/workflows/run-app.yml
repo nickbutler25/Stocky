@@ -1,21 +1,50 @@
-name: Run Stockwood Vale Tee Times Daily - Mad Al
+name: Run Stockwood Vale Tee Times Daily
 
 on:
   schedule:
-    # Run at 5:00 PM UK time on Thursdays and Fridays
+    # Run at 5:00 PM UK time every day
     # Two schedules needed because UK switches between BST (UTC+1) and GMT (UTC+0)
     # BST: Last Sunday in March to last Sunday in October (UTC+1)
     # GMT: Last Sunday in October to last Sunday in March (UTC+0)
     # Starting 1 hour earlier to account for GitHub Actions scheduling delays
-    - cron: '0 16 * 4-10 4,5'  # 4:00 PM UTC = 5:00 PM BST (April-October, definitely BST)
-    - cron: '0 17 * 11-12,1-2 4,5'  # 5:00 PM UTC = 5:00 PM GMT (November-February, definitely GMT)
-    # March is transition month - using BST time (may be 1 hour early on first few Thursdays/Fridays)
-    - cron: '0 16 * 3 4,5'  # March: using BST schedule (transition happens late March)
-  workflow_dispatch:  # Allows manual triggering
+    - cron: '0 16 * 4-10 *'      # 4:00 PM UTC = 5:00 PM BST (April-October)
+    - cron: '0 17 * 11-12,1-2 *' # 5:00 PM UTC = 5:00 PM GMT (November-February)
+    - cron: '0 16 * 3 *'         # March: using BST schedule (transition happens late March)
+  workflow_dispatch:              # Allows manual triggering
 
 jobs:
-  run-app:
+  check-day:
     runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.check.outputs.should_run }}
+    steps:
+      - name: Check if today is a booking day
+        id: check
+        run: |
+          # Always run on manual trigger
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "Manual trigger - running regardless of BOOKING_DAYS."
+            echo "should_run=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          export TZ='Europe/London'
+          DAY_OF_WEEK=$(date '+%A')
+          echo "Today is: $DAY_OF_WEEK"
+          echo "Configured booking days: ${{ vars.BOOKING_DAYS }}"
+
+          if echo "${{ vars.BOOKING_DAYS }}" | grep -qi "$DAY_OF_WEEK"; then
+            echo "Today is a booking day."
+            echo "should_run=true" >> $GITHUB_OUTPUT
+          else
+            echo "Today ($DAY_OF_WEEK) is not in BOOKING_DAYS. Skipping."
+            echo "should_run=false" >> $GITHUB_OUTPUT
+          fi
+
+  run-booking:
+    runs-on: ubuntu-latest
+    needs: check-day
+    if: needs.check-day.outputs.should_run == 'true'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -25,60 +54,155 @@ jobs:
         with:
           python-version: '3.13'
 
-
-      # Install Google Chrome
       - name: Install Google Chrome
         run: |
           wget -q -O - https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb > chrome.deb
           sudo dpkg -i chrome.deb
           sudo apt --fix-broken install -y
 
-      # Install Python dependencies (webdriver-manager will handle ChromeDriver automatically)
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # Wait until 5:58 PM UK time before running the Python script
+      - name: Set day-specific booking times
+        id: times
+        run: |
+          export TZ='Europe/London'
+          DAY=$(date '+%A')
+          echo "Day of week: $DAY"
+
+          # Variables are named after the day being BOOKED (9 days ahead), not the run day
+          # Monday runs → books Wednesday, Tuesday runs → books Thursday, etc.
+          case $DAY in
+            Monday)    # Books Wednesday
+              MAD_AL_TIME="${{ vars.MAD_AL_WEDNESDAY_TIME }}"
+              MAD_AL_MIN="${{ vars.MAD_AL_WEDNESDAY_MIN_TIME }}"
+              MAD_AL_MAX="${{ vars.MAD_AL_WEDNESDAY_MAX_TIME }}"
+              EDDIE_TIME="${{ vars.EDDIE_WEDNESDAY_TIME }}"
+              EDDIE_MIN="${{ vars.EDDIE_WEDNESDAY_MIN_TIME }}"
+              EDDIE_MAX="${{ vars.EDDIE_WEDNESDAY_MAX_TIME }}"
+              ERIC_TIME="${{ vars.ERIC_WEDNESDAY_TIME }}"
+              ERIC_MIN="${{ vars.ERIC_WEDNESDAY_MIN_TIME }}"
+              ERIC_MAX="${{ vars.ERIC_WEDNESDAY_MAX_TIME }}"
+              ;;
+            Tuesday)   # Books Thursday
+              MAD_AL_TIME="${{ vars.MAD_AL_THURSDAY_TIME }}"
+              MAD_AL_MIN="${{ vars.MAD_AL_THURSDAY_MIN_TIME }}"
+              MAD_AL_MAX="${{ vars.MAD_AL_THURSDAY_MAX_TIME }}"
+              EDDIE_TIME="${{ vars.EDDIE_THURSDAY_TIME }}"
+              EDDIE_MIN="${{ vars.EDDIE_THURSDAY_MIN_TIME }}"
+              EDDIE_MAX="${{ vars.EDDIE_THURSDAY_MAX_TIME }}"
+              ERIC_TIME="${{ vars.ERIC_THURSDAY_TIME }}"
+              ERIC_MIN="${{ vars.ERIC_THURSDAY_MIN_TIME }}"
+              ERIC_MAX="${{ vars.ERIC_THURSDAY_MAX_TIME }}"
+              ;;
+            Wednesday) # Books Friday
+              MAD_AL_TIME="${{ vars.MAD_AL_FRIDAY_TIME }}"
+              MAD_AL_MIN="${{ vars.MAD_AL_FRIDAY_MIN_TIME }}"
+              MAD_AL_MAX="${{ vars.MAD_AL_FRIDAY_MAX_TIME }}"
+              EDDIE_TIME="${{ vars.EDDIE_FRIDAY_TIME }}"
+              EDDIE_MIN="${{ vars.EDDIE_FRIDAY_MIN_TIME }}"
+              EDDIE_MAX="${{ vars.EDDIE_FRIDAY_MAX_TIME }}"
+              ERIC_TIME="${{ vars.ERIC_FRIDAY_TIME }}"
+              ERIC_MIN="${{ vars.ERIC_FRIDAY_MIN_TIME }}"
+              ERIC_MAX="${{ vars.ERIC_FRIDAY_MAX_TIME }}"
+              ;;
+            Thursday)  # Books Saturday
+              MAD_AL_TIME="${{ vars.MAD_AL_SATURDAY_TIME }}"
+              MAD_AL_MIN="${{ vars.MAD_AL_SATURDAY_MIN_TIME }}"
+              MAD_AL_MAX="${{ vars.MAD_AL_SATURDAY_MAX_TIME }}"
+              EDDIE_TIME="${{ vars.EDDIE_SATURDAY_TIME }}"
+              EDDIE_MIN="${{ vars.EDDIE_SATURDAY_MIN_TIME }}"
+              EDDIE_MAX="${{ vars.EDDIE_SATURDAY_MAX_TIME }}"
+              ERIC_TIME="${{ vars.ERIC_SATURDAY_TIME }}"
+              ERIC_MIN="${{ vars.ERIC_SATURDAY_MIN_TIME }}"
+              ERIC_MAX="${{ vars.ERIC_SATURDAY_MAX_TIME }}"
+              ;;
+            Friday)    # Books Sunday
+              MAD_AL_TIME="${{ vars.MAD_AL_SUNDAY_TIME }}"
+              MAD_AL_MIN="${{ vars.MAD_AL_SUNDAY_MIN_TIME }}"
+              MAD_AL_MAX="${{ vars.MAD_AL_SUNDAY_MAX_TIME }}"
+              EDDIE_TIME="${{ vars.EDDIE_SUNDAY_TIME }}"
+              EDDIE_MIN="${{ vars.EDDIE_SUNDAY_MIN_TIME }}"
+              EDDIE_MAX="${{ vars.EDDIE_SUNDAY_MAX_TIME }}"
+              ERIC_TIME="${{ vars.ERIC_SUNDAY_TIME }}"
+              ERIC_MIN="${{ vars.ERIC_SUNDAY_MIN_TIME }}"
+              ERIC_MAX="${{ vars.ERIC_SUNDAY_MAX_TIME }}"
+              ;;
+            Saturday)  # Books Monday
+              MAD_AL_TIME="${{ vars.MAD_AL_MONDAY_TIME }}"
+              MAD_AL_MIN="${{ vars.MAD_AL_MONDAY_MIN_TIME }}"
+              MAD_AL_MAX="${{ vars.MAD_AL_MONDAY_MAX_TIME }}"
+              EDDIE_TIME="${{ vars.EDDIE_MONDAY_TIME }}"
+              EDDIE_MIN="${{ vars.EDDIE_MONDAY_MIN_TIME }}"
+              EDDIE_MAX="${{ vars.EDDIE_MONDAY_MAX_TIME }}"
+              ERIC_TIME="${{ vars.ERIC_MONDAY_TIME }}"
+              ERIC_MIN="${{ vars.ERIC_MONDAY_MIN_TIME }}"
+              ERIC_MAX="${{ vars.ERIC_MONDAY_MAX_TIME }}"
+              ;;
+            Sunday)    # Books Tuesday
+              MAD_AL_TIME="${{ vars.MAD_AL_TUESDAY_TIME }}"
+              MAD_AL_MIN="${{ vars.MAD_AL_TUESDAY_MIN_TIME }}"
+              MAD_AL_MAX="${{ vars.MAD_AL_TUESDAY_MAX_TIME }}"
+              EDDIE_TIME="${{ vars.EDDIE_TUESDAY_TIME }}"
+              EDDIE_MIN="${{ vars.EDDIE_TUESDAY_MIN_TIME }}"
+              EDDIE_MAX="${{ vars.EDDIE_TUESDAY_MAX_TIME }}"
+              ERIC_TIME="${{ vars.ERIC_TUESDAY_TIME }}"
+              ERIC_MIN="${{ vars.ERIC_TUESDAY_MIN_TIME }}"
+              ERIC_MAX="${{ vars.ERIC_TUESDAY_MAX_TIME }}"
+              ;;
+          esac
+
+          echo "mad_al_time=$MAD_AL_TIME" >> $GITHUB_OUTPUT
+          echo "mad_al_min=$MAD_AL_MIN" >> $GITHUB_OUTPUT
+          echo "mad_al_max=$MAD_AL_MAX" >> $GITHUB_OUTPUT
+          echo "eddie_time=$EDDIE_TIME" >> $GITHUB_OUTPUT
+          echo "eddie_min=$EDDIE_MIN" >> $GITHUB_OUTPUT
+          echo "eddie_max=$EDDIE_MAX" >> $GITHUB_OUTPUT
+          echo "eric_time=$ERIC_TIME" >> $GITHUB_OUTPUT
+          echo "eric_min=$ERIC_MIN" >> $GITHUB_OUTPUT
+          echo "eric_max=$ERIC_MAX" >> $GITHUB_OUTPUT
+
       - name: Wait until 5:58 PM UK time
         run: |
-          # Install TZ data for timezone conversion
           sudo apt-get update -qq && sudo apt-get install -y tzdata
 
-          # Get current time in UK timezone
           export TZ='Europe/London'
           CURRENT_UK_TIME=$(date '+%Y-%m-%d %H:%M:%S %Z')
           echo "Current UK time: $CURRENT_UK_TIME"
 
-          # Get current time in seconds since epoch
           CURRENT_TIME=$(date +%s)
-
-          # Calculate target time: 5:58 PM UK time (17:58)
-          # Note: date command with TZ set will handle BST/GMT automatically
           TARGET_TIME=$(TZ='Europe/London' date -d "today 17:58:00" +%s)
 
-          # If target time is in the past (already passed today), don't wait
           if [ $CURRENT_TIME -gt $TARGET_TIME ]; then
             echo "Current time is after 5:58 PM UK time. Running script immediately."
             exit 0
           fi
 
-          # Calculate wait time in seconds
           WAIT_TIME=$((TARGET_TIME - CURRENT_TIME))
           WAIT_MINUTES=$((WAIT_TIME / 60))
 
           echo "Target time: 5:58 PM UK (17:58 Europe/London)"
           echo "Waiting for $WAIT_TIME seconds ($WAIT_MINUTES minutes)"
 
-          # Wait until 5:58 PM UK time
           sleep $WAIT_TIME
 
-
-      # Run Python script
-      - name: Run Python script
+      - name: Run booking scripts
         run: |
-          # Run the second instance of the Python script with the second set of parameters
-          python program.py '{"username": "${{ vars.MAD_AL_USER }}", "password": "${{ secrets.MAD_AL_PASSWORD }}", "time_to_book": "${{ vars.SATURDAY_TIME }}"
-          , "min_time": "${{ vars.SATURDAY_MIN_TIME }}", "max_time": "${{ vars.SATURDAY_MAX_TIME }}"}'
+          python program.py '{"username": "${{ vars.MAD_AL_USER }}", "password": "${{ secrets.MAD_AL_PASSWORD }}", "time_to_book": "${{ steps.times.outputs.mad_al_time }}", "min_time": "${{ steps.times.outputs.mad_al_min }}", "max_time": "${{ steps.times.outputs.mad_al_max }}"}' &
+          MAD_AL_PID=$!
 
+          if [ "${{ vars.EDDIE_SHOULD_RUN }}" == "true" ]; then
+            python program.py '{"username": "${{ vars.EDDIE_USER }}", "password": "${{ secrets.EDDIE_PASSWORD }}", "time_to_book": "${{ steps.times.outputs.eddie_time }}", "min_time": "${{ steps.times.outputs.eddie_min }}", "max_time": "${{ steps.times.outputs.eddie_max }}"}' &
+            EDDIE_PID=$!
+          fi
 
+          if [ "${{ vars.ERIC_SHOULD_RUN }}" == "true" ]; then
+            python program.py '{"username": "${{ vars.ERIC_USER }}", "password": "${{ secrets.ERIC_PASSWORD }}", "time_to_book": "${{ steps.times.outputs.eric_time }}", "min_time": "${{ steps.times.outputs.eric_min }}", "max_time": "${{ steps.times.outputs.eric_max }}"}' &
+            ERIC_PID=$!
+          fi
+
+          wait $MAD_AL_PID
+          [ -n "$EDDIE_PID" ] && wait $EDDIE_PID
+          [ -n "$ERIC_PID" ] && wait $ERIC_PID
