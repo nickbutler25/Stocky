@@ -204,5 +204,5 @@ jobs:
           fi
 
           wait $MAD_AL_PID
-          [ -n "$EDDIE_PID" ] && wait $EDDIE_PID
-          [ -n "$ERIC_PID" ] && wait $ERIC_PID
+          if [ -n "$EDDIE_PID" ]; then wait $EDDIE_PID; fi
+          if [ -n "$ERIC_PID" ]; then wait $ERIC_PID; fi
