@@ -1,16 +1,10 @@
 name: Run Stockwood Vale Tee Times Daily
 
 on:
-  schedule:
-    # Run at 5:00 PM UK time every day
-    # Two schedules needed because UK switches between BST (UTC+1) and GMT (UTC+0)
-    # BST: Last Sunday in March to last Sunday in October (UTC+1)
-    # GMT: Last Sunday in October to last Sunday in March (UTC+0)
-    # Starting 1 hour earlier to account for GitHub Actions scheduling delays
-    - cron: '0 16 * 4-10 *'      # 4:00 PM UTC = 5:00 PM BST (April-October)
-    - cron: '0 17 * 11-12,1-2 *' # 5:00 PM UTC = 5:00 PM GMT (November-February)
-    - cron: '0 16 * 3 *'         # March: using BST schedule (transition happens late March)
-  workflow_dispatch:              # Allows manual triggering
+  # Triggered externally by cron-job.org via GitHub API (workflow_dispatch) at 17:45 UK time daily.
+  # cron-job.org is configured with timezone Europe/London so BST/GMT is handled automatically.
+  # The "Wait until 5:58 PM UK time" step handles precise timing once the runner is up.
+  workflow_dispatch:
 
 jobs:
   check-day:
