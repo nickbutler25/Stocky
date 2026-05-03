@@ -31,7 +31,7 @@ python program.py '{"username": "user@email.com", "password": "pass", "time_to_b
 ### GitHub Actions
 - Single workflow (`run-app.yml`) runs daily at 5:00 PM UK time and checks `BOOKING_DAYS` variable to decide whether to proceed
 - Currently configured to run Monday, Tuesday, Thursday, and Friday
-- Manual trigger available via GitHub Actions UI → "Run workflow" button (always runs regardless of `BOOKING_DAYS`)
+- Manual trigger available via GitHub Actions UI → "Run workflow" button (respects `BOOKING_DAYS` by default; set `force_run: true` to bypass)
 - Check logs in the Actions tab for debugging failed runs
 
 ## Architecture
@@ -142,11 +142,11 @@ Three users run in parallel, each with an independent on/off switch:
 | Sunday | Tuesday |
 
 ### Workflow Jobs
-1. **`check-day`**: Checks if today's UK day is in `BOOKING_DAYS`. Always passes on `workflow_dispatch`.
+1. **`check-day`**: Checks if today's UK day is in `BOOKING_DAYS`. Passes unconditionally only if `force_run: true` input is set.
 2. **`run-booking`**: Runs only if `check-day` passes. Sets day-specific times, waits until 5:58 PM UK time, then launches all enabled user scripts in parallel.
 
 ### Workflow Timing
-- Triggers at 5:00 PM UK time daily via multiple cron schedules (handles BST/GMT)
+- Triggered daily at 5:00 PM UK time by cron-job.org via `workflow_dispatch` (BST/GMT handled automatically by cron-job.org's Europe/London timezone setting)
 - Waits until 5:58 PM UK time before executing scripts
 - Scripts begin attempting bookings, ready for 6:00 PM slot release
 

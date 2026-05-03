@@ -5,6 +5,11 @@ on:
   # cron-job.org is configured with timezone Europe/London so BST/GMT is handled automatically.
   # The "Wait until 5:58 PM UK time" step handles precise timing once the runner is up.
   workflow_dispatch:
+    inputs:
+      force_run:
+        description: 'Skip BOOKING_DAYS check and always run (for manual triggers)'
+        required: false
+        default: 'false'
 
 jobs:
   check-day:
@@ -15,9 +20,9 @@ jobs:
       - name: Check if today is a booking day
         id: check
         run: |
-          # Always run on manual trigger
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            echo "Manual trigger - running regardless of BOOKING_DAYS."
+          # Skip day check only when force_run input is explicitly set to true
+          if [ "${{ github.event.inputs.force_run }}" == "true" ]; then
+            echo "force_run=true - running regardless of BOOKING_DAYS."
             echo "should_run=true" >> $GITHUB_OUTPUT
             exit 0
           fi
